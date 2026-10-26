@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Koyacare: book an appointment</title>
+  <style>
+    :root {
+      --ink: #06201f;
+      --muted: #4f6b69;
+      --bg: #f2f9fb;
+      --wash: #defffd;
+      --surface: #ffffff;
+      --line: #d5ebe9;
+      --line-strong: #b6dad7;
+      --deep: #001716;
+      --deep-2: #00201e;
+      --on-deep: #f1fffe;
+      --on-deep-muted: #9cc2bf;
+      --brand: #00c3b9;
+      --brand-press: #00aca3;
+      --on-brand: #001716;
+      --brand-text: #00776f;
+      --brand-soft: #e3fcfa;
+      --glow: #5ff0e6;
+      --select-bg: #001716;
+      --select-fg: #f1fffe;
+      --select-sub: #9cc2bf;
+      --select-num: #5ff0e6;
+      --alt-bg: #00201e;
+      --alt-fg: #5ff0e6;
+      --danger: #b1291f;
+      --danger-soft: #fdecea;
+      --shadow: 0 1px 2px rgba(0, 23, 22, .05), 0 14px 34px -14px rgba(0, 23, 22, .22);
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e9fbf9;
+        --muted: #8fb2af;
+        --bg: #000e0d;
+        --wash: #002421;
+        --surface: #00201e;
+        --line: #0f3a37;
+        --line-strong: #1b5551;
+        --deep: #001716;
+        --brand-text: #4de3d9;
+        --brand-soft: #06312e;
+        --select-bg: #00c3b9;
+        --select-fg: #001716;
+        --select-sub: rgba(0, 23, 22, .72);
+        --select-num: #001716;
+        --alt-bg: #0a3b38;
+        --danger: #ff8f86;
+        --danger-soft: #3a1d1b;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 16px 40px -14px rgba(0, 0, 0, .7);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font: 16px/1.55 var(--sans);
+      background: var(--bg);
+    }
+    button, input { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 70%, transparent); outline-offset: 2px; border-radius: 8px; }
+
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+    .main { padding-top: 34px; padding-bottom: 72px; }
+
+    /* ---- deep band: top bar + intro ---- */
+    .band {
+      color: var(--on-deep);
+      background: #001716;
+      border-radius: 0 0 34px 34px;
+      padding-bottom: 46px;
+    }
+    .bar { display: flex; align-items: center; gap: 12px; padding: 22px 0 8px; }
+    .mark { width: 38px; height: 38px; border-radius: 12px; background: var(--brand); color: var(--on-brand); display: grid; place-items: center; flex: none; }
+    .brand { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; letter-spacing: .005em; }
+    .brand small { display: block; font: 400 .8rem/1.2 var(--sans); color: var(--on-deep-muted); letter-spacing: 0; }
+
+    .intro { padding: 46px 0 0; max-width: 36rem; }
+    h1 {
+      font-family: var(--serif); font-weight: 600; font-size: clamp(2.2rem, 6.2vw, 3.4rem);
+      line-height: 1.04; letter-spacing: -.015em; margin: 0 0 14px; color: #5ff0e6;
+    }
+    .intro p { margin: 0; color: var(--on-deep-muted); font-size: 1.06rem; max-width: 30rem; }
+    .promises { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 24px 0 0; padding: 0; list-style: none; color: var(--on-deep-muted); font-size: .92rem; }
+    .promises li { display: flex; align-items: center; gap: 8px; }
+    .promises svg { color: var(--glow); flex: none; }
+
+    /* ---- controls ---- */
+    .controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+    .seg { display: inline-flex; padding: 4px; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; max-width: 100%; overflow-x: auto; }
+    .seg button { border: 0; background: transparent; padding: 8px 16px; border-radius: 999px; cursor: pointer; color: var(--muted); white-space: nowrap; font-weight: 550; }
+    .seg button:hover { color: var(--ink); }
+    .seg button[aria-pressed="true"] { background: var(--select-bg); color: var(--select-fg); }
+    .link { border: 0; background: none; color: var(--brand-text); cursor: pointer; padding: 6px 4px; font-weight: 600; }
+    .link:hover { text-decoration: underline; }
+
+    .days { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 14px; margin: 0 -2px; scroll-snap-type: x proximity; }
+    .day {
+      flex: 0 0 auto; width: 78px; padding: 12px 6px 11px; text-align: center; cursor: pointer; scroll-snap-align: start;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 16px; transition: border-color .15s, background .15s;
+    }
+    .day:hover { border-color: var(--line-strong); }
+    .day .dow { display: block; font-size: .82rem; color: var(--muted); }
+    .day .num { display: block; font-family: var(--serif); font-size: 1.7rem; line-height: 1.15; font-weight: 600; font-variant-numeric: lining-nums; }
+    .day .open { display: block; font-size: .76rem; color: var(--muted); margin-top: 2px; }
+    .day[aria-pressed="true"] { background: var(--select-bg); border-color: var(--select-bg); box-shadow: var(--shadow); }
+    .day[aria-pressed="true"] .dow, .day[aria-pressed="true"] .open { color: var(--select-sub); }
+    .day[aria-pressed="true"] .num { color: var(--select-num); }
+    .day.full:not([aria-pressed="true"]) { opacity: .55; }
+
+    /* ---- schedule ---- */
+    .board { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+    .board-head { padding: 22px 26px 16px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; background: linear-gradient(180deg, var(--wash), transparent); }
+    .board-head h2 { margin: 0; font-family: var(--serif); font-size: 1.5rem; font-weight: 600; letter-spacing: -.005em; }
+    .board-head span { color: var(--muted); font-size: .93rem; }
+    .row { display: grid; grid-template-columns: 112px 1fr auto; align-items: center; gap: 8px 18px; padding: 16px 26px; border-top: 1px solid var(--line); }
+    .row:first-of-type { border-top: 0; }
+    .time { font-family: var(--serif); font-size: 1.75rem; line-height: 1; font-weight: 600; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+    .time small { font: 500 .78rem var(--sans); color: var(--muted); margin-left: 3px; letter-spacing: .02em; }
+    .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 650; font-size: .95rem; flex: none; background: var(--brand-soft); color: var(--brand-text); }
+    .avatar.alt { background: var(--alt-bg); color: var(--alt-fg); }
+    .who b { display: block; font-weight: 600; line-height: 1.25; }
+    .who span { display: block; color: var(--muted); font-size: .88rem; line-height: 1.3; }
+    .row.taken .time, .row.taken .who { opacity: .5; }
+    .tag { font-size: .85rem; color: var(--muted); padding: 7px 14px; border: 1px dashed var(--line-strong); border-radius: 999px; }
+
+    .btn {
+      border: 0; cursor: pointer; background: var(--brand); color: var(--on-brand); padding: 11px 22px; border-radius: 12px; font-weight: 650;
+      transition: background .15s, transform .1s; white-space: nowrap;
+    }
+    .btn:hover { background: var(--brand-press); }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .6; cursor: wait; }
+    .btn.wide { width: 100%; padding: 14px 22px; font-size: 1.02rem; }
+    .btn.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); font-weight: 600; }
+    .btn.quiet:hover { background: var(--brand-soft); }
+    .btn.warn { background: transparent; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent); font-weight: 600; }
+    .btn.warn:hover { background: var(--danger-soft); }
+
+    .state { padding: 54px 26px; text-align: center; color: var(--muted); }
+    .state b { display: block; color: var(--ink); font-family: var(--serif); font-size: 1.25rem; margin-bottom: 4px; }
+    .skel { height: 70px; margin: 0 26px; border-top: 1px solid var(--line); background: linear-gradient(90deg, transparent, var(--brand-soft), transparent); background-size: 220% 100%; animation: shimmer 1.4s linear infinite; }
+    @keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+    .foot { color: var(--muted); font-size: .85rem; margin-top: 26px; }
+
+    /* ---- sheet ---- */
+    .overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(0, 14, 13, .62); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: fade .18s ease-out; }
+    .sheet { position: relative; width: min(460px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 28px 26px 26px; box-shadow: var(--shadow); animation: rise .24s cubic-bezier(.2, .8, .2, 1); }
+    @keyframes fade { from { opacity: 0; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px) scale(.985); } }
+    .x { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+    .x:hover { background: var(--brand-soft); color: var(--ink); }
+    .sheet h3 { font-family: var(--serif); font-size: 1.6rem; line-height: 1.15; font-weight: 600; margin: 0 0 6px; padding-right: 36px; letter-spacing: -.01em; }
+    .sheet .lede { margin: 0 0 18px; color: var(--muted); }
+    .pick { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; background: var(--brand-soft); margin-bottom: 4px; }
+    .pick .avatar { background: var(--surface); }
+    .pick b { display: block; line-height: 1.3; }
+    .pick span { color: var(--muted); font-size: .92rem; }
+    label { display: block; font-weight: 600; font-size: .92rem; margin: 18px 0 6px; }
+    input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--bg); }
+    input:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 45%, transparent); outline-offset: 0; border-color: var(--brand); }
+    .err { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); font-size: .95rem; }
+    .actions { display: grid; gap: 10px; margin-top: 22px; }
+    .fine { margin: 14px 0 0; color: var(--muted); font-size: .86rem; text-align: center; }
+
+    .badge { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--deep); color: var(--glow); margin-bottom: 16px; }
+    .badge.off { background: var(--brand-soft); color: var(--muted); }
+    .badge path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: draw .5s .12s ease-out forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    .facts { margin: 18px 0 0; border-top: 1px solid var(--line); }
+    .facts div { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+    .facts dt { color: var(--muted); flex: none; }
+    .facts dd { margin: 0; text-align: right; word-break: break-word; }
+    .ref { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .ref code { font: .82rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
+    .ref button { border: 1px solid var(--line-strong); background: transparent; border-radius: 8px; padding: 3px 9px; cursor: pointer; font-size: .8rem; color: var(--muted); flex: none; }
+    .ref button:hover { color: var(--ink); background: var(--brand-soft); }
+
+    @media (max-width: 600px) {
+      .wrap { padding: 0 16px; }
+      .band { border-radius: 0 0 26px 26px; padding-bottom: 34px; }
+      .intro { padding: 30px 0 0; }
+      .main { padding-top: 26px; padding-bottom: 56px; }
+      .board-head { padding: 18px 18px 14px; }
+      .row { grid-template-columns: 1fr auto; padding: 14px 18px; gap: 8px 12px; }
+      .row .time { grid-column: 1 / -1; font-size: 1.55rem; }
+      .skel { margin: 0 18px; }
+      .overlay { align-items: end; padding: 0; }
+      .sheet { border-radius: 24px 24px 0 0; width: 100%; max-height: 92vh; padding: 26px 20px 24px; animation-name: slideup; }
+      @keyframes slideup { from { transform: translateY(40px); opacity: .4; } }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="band">
+   <div class="wrap">
+    <header class="bar">
+      <div class="mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+      <div class="brand">Koyacare<small>Primary care and family health</small></div>
+    </header>
+
+    <section class="intro">
+      <h1>Book your visit in under a minute</h1>
+      <p>Choose a day, pick a time with your doctor, and get your confirmation straight away.</p>
+      <ul class="promises">
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Confirmed instantly</li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Cancel any time</li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No account needed</li>
+      </ul>
+    </section>
+   </div>
+  </div>
+
+  <div class="wrap main">
+    <div class="controls">
+      <div class="seg" id="providers" role="group" aria-label="Choose a doctor"></div>
+      <button class="link" id="refresh" type="button">Refresh times</button>
+    </div>
+
+    <div class="days" id="days" role="group" aria-label="Choose a day"></div>
+
+    <main class="board" aria-live="polite">
+      <div class="board-head" id="boardHead" hidden></div>
+      <div id="rows"></div>
+    </main>
+
+    <p class="foot">Times are shown in your local time zone.</p>
+  </div>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+  </div>
+
+  <noscript>This page needs JavaScript to show appointment times.</noscript>
+
+  <script>
+    var API_KEY = "__API_KEY__";
+
+    var state = { slots: [], provider: "", day: null, selected: null, idemKey: null, sending: false, opener: null, loaded: false, failed: false };
+
+    var el = {
+      providers: document.getElementById("providers"),
+      days: document.getElementById("days"),
+      head: document.getElementById("boardHead"),
+      rows: document.getElementById("rows"),
+      refresh: document.getElementById("refresh"),
+      overlay: document.getElementById("overlay"),
+      sheet: document.getElementById("sheet")
+    };
+
+    /* ---------- tiny helpers ---------- */
+    function h(tag, attrs) {
+      var node = document.createElement(tag);
+      Object.keys(attrs || {}).forEach(function (k) {
+        var v = attrs[k];
+        if (v === false || v == null) return;
+        if (k === "class") node.className = v;
+        else if (k === "text") node.textContent = v;
+        else if (k === "html") node.innerHTML = v; // only used with static strings below
+        else if (k.slice(0, 2) === "on") node.addEventListener(k.slice(2), v);
+        else node.setAttribute(k, v === true ? "" : v);
+      });
+      for (var i = 2; i < arguments.length; i++) {
+        var c = arguments[i];
+        if (c == null || c === false) continue;
+        node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      }
+      return node;
+    }
+
+    function api(path, options) {
+      options = options || {};
+      options.headers = Object.assign({ "X-API-Key": API_KEY }, options.headers || {});
+      return fetch(path, options).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return { status: res.status, ok: res.ok, data: data, retryAfter: res.headers.get("Retry-After") };
+        });
+      });
+    }
+
+    var fmtWeekday = new Intl.DateTimeFormat(undefined, { weekday: "short" });
+    var fmtLongDay = new Intl.DateTimeFormat(undefined, { weekday: "long", day: "numeric", month: "long" });
+    var fmtFullDay = new Intl.DateTimeFormat(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    var fmtTime = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+
+    function dayKey(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+    function timeParts(iso) {
+      var parts = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).formatToParts(new Date(iso));
+      var main = "", suffix = "";
+      parts.forEach(function (p) {
+        if (p.type === "dayPeriod") suffix = p.value;
+        else if (p.type !== "literal" || main) main += p.value;
+      });
+      return { main: main.trim(), suffix: suffix };
+    }
+    function minutes(slot) { return Math.round((Date.parse(slot.end) - Date.parse(slot.start)) / 60000); }
+    function doctorName(provider) { return provider; }
+    function initial(provider) { return (provider.replace(/^dr\.?\s+/i, "").trim()[0] || "D").toUpperCase(); }
+    function providerNames() {
+      return Array.from(new Set(upcoming().map(function (s) { return s.provider; }))).sort();
+    }
+
+    function upcoming() {
+      var now = Date.now();
+      return state.slots.filter(function (s) { return Date.parse(s.start) > now; }); // started slots can't be booked
+    }
+    function visible() {
+      return upcoming().filter(function (s) { return !state.provider || s.provider === state.provider; });
+    }
+    function groupDays() {
+      var map = {};
+      visible().forEach(function (s) {
+        var d = new Date(s.start);
+        var k = dayKey(d);
+        (map[k] = map[k] || { key: k, date: d, open: 0, total: 0 });
+        map[k].total++;
+        if (s.available) map[k].open++;
+      });
+      return Object.keys(map).sort().map(function (k) { return map[k]; });
+    }
+
+    /* ---------- page rendering ---------- */
+    function renderProviders() {
+      var names = providerNames();
+      if (state.provider && names.indexOf(state.provider) < 0) state.provider = "";
+      el.providers.innerHTML = "";
+      el.providers.hidden = names.length < 2;
+      [""].concat(names).forEach(function (n) {
+        el.providers.appendChild(h("button", {
+          type: "button",
+          text: n || "Any doctor",
+          "aria-pressed": String(state.provider === n),
+          onclick: function () { state.provider = n; render(); }
+        }));
+      });
+    }
+
+    function renderDays(days) {
+      el.days.innerHTML = "";
+      days.forEach(function (d) {
+        var label = d.open ? d.open + (d.open === 1 ? " time" : " times") : "Full";
+        el.days.appendChild(h("button", {
+          type: "button",
+          class: "day" + (d.open ? "" : " full"),
+          "aria-pressed": String(state.day === d.key),
+          "aria-label": fmtLongDay.format(d.date) + ", " + label,
+          onclick: function () { state.day = d.key; render(); }
+        },
+          h("span", { class: "dow", text: fmtWeekday.format(d.date) }),
+          h("span", { class: "num", text: String(d.date.getDate()) }),
+          h("span", { class: "open", text: label })
+        ));
+      });
+    }
+
+    function renderRows(days) {
+      el.rows.innerHTML = "";
+      if (!state.loaded) {
+        el.head.hidden = true;
+        for (var i = 0; i < 4; i++) el.rows.appendChild(h("div", { class: "skel", "aria-hidden": "true" }));
+        return;
+      }
+      if (state.failed) {
+        el.head.hidden = true;
+        el.rows.appendChild(h("div", { class: "state" }, h("b", { text: "We couldn't load the schedule" }), "Check your connection, then choose Refresh times."));
+        return;
+      }
+      if (!days.length) {
+        el.head.hidden = true;
+        el.rows.appendChild(h("div", { class: "state" }, h("b", { text: "No upcoming appointments" }), "New times will appear here. Choose Refresh times to check again."));
+        return;
+      }
+      var today = days.filter(function (d) { return d.key === state.day; })[0];
+      var list = visible().filter(function (s) { return dayKey(new Date(s.start)) === state.day; });
+      var providerNote = state.provider ? " with " + state.provider : "";
+      el.head.hidden = false;
+      el.head.innerHTML = "";
+      el.head.appendChild(h("h2", { text: fmtLongDay.format(today.date) }));
+      el.head.appendChild(h("span", { text: today.open ? today.open + " of " + today.total + " times open" + providerNote : "Fully booked" + providerNote }));
+
+      list.forEach(function (slot, idx) {
+        var t = timeParts(slot.start);
+        var providers = providerNames();
+        var alt = providers.indexOf(slot.provider) % 2 === 1;
+        var action = slot.available
+          ? h("button", {
+              type: "button", class: "btn", text: "Book",
+              "aria-label": "Book " + t.main + " " + t.suffix + " with " + slot.provider + " on " + fmtLongDay.format(new Date(slot.start)),
+              onclick: function (e) { openForm(slot, e.currentTarget); }
+            })
+          : h("span", { class: "tag", text: "Booked" });
+        el.rows.appendChild(h("div", { class: "row" + (slot.available ? "" : " taken") },
+          h("div", { class: "time" }, t.main, h("small", { text: t.suffix })),
+          h("div", { class: "who" },
+            h("div", { class: "avatar" + (alt ? " alt" : ""), "aria-hidden": "true", text: initial(slot.provider) }),
+            h("div", null, h("b", { text: slot.provider }), h("span", { text: "Until " + fmtTime.format(new Date(slot.end)) + ", " + minutes(slot) + " minutes" }))
+          ),
+          action
+        ));
+      });
+    }
+
+    function render() {
+      renderProviders();
+      var days = state.loaded && !state.failed ? groupDays() : [];
+      if (days.length && !days.some(function (d) { return d.key === state.day; })) {
+        var firstOpen = days.filter(function (d) { return d.open; })[0];
+        state.day = (firstOpen || days[0]).key;
+      }
+      renderDays(days);
+      renderRows(days);
+    }
+
+    function loadSlots() {
+      return api("/slots").then(function (r) {
+        if (!r.ok) { state.failed = true; }
+        else { state.failed = false; state.slots = r.data.slots || []; }
+      }).catch(function () {
+        state.failed = true;
+      }).then(function () {
+        state.loaded = true;
+        render();
+      });
+    }
+
+    /* ---------- sheet (booking form + confirmation) ---------- */
+    function openSheet(content, opener) {
+      if (opener) state.opener = opener;
+      el.sheet.innerHTML = "";
+      el.sheet.appendChild(h("button", { type: "button", class: "x", "aria-label": "Close", onclick: closeSheet },
+        h("span", { html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' })));
+      el.sheet.appendChild(content);
+      el.overlay.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSheet() {
+      if (state.sending) return;
+      el.overlay.hidden = true;
+      document.body.style.overflow = "";
+      state.selected = null;
+      if (state.opener && document.contains(state.opener)) state.opener.focus();
+      state.opener = null;
+    }
+
+    el.overlay.addEventListener("mousedown", function (e) { if (e.target === el.overlay) closeSheet(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !el.overlay.hidden) closeSheet();
+    });
+
+    function slotSummary(slot) {
+      var t = timeParts(slot.start);
+      var alt = providerNames().indexOf(slot.provider) % 2 === 1;
+      return h("div", { class: "pick" },
+        h("div", { class: "avatar" + (alt ? " alt" : ""), "aria-hidden": "true", text: initial(slot.provider) }),
+        h("div", null,
+          h("b", { text: slot.provider }),
+          h("span", { text: fmtFullDay.format(new Date(slot.start)) + " at " + t.main + " " + t.suffix })
+        )
+      );
+    }
+
+    function openForm(slot, opener) {
+      state.selected = slot;
+      state.idemKey = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+
+      var name = h("input", { id: "name", name: "name", autocomplete: "name", required: true, maxlength: "200" });
+      var email = h("input", { id: "email", name: "email", type: "email", autocomplete: "email", required: true, maxlength: "320", inputmode: "email" });
+      var error = h("div", { class: "err", role: "alert", hidden: true });
+      var submit = h("button", { type: "submit", class: "btn wide", text: "Confirm booking" });
+
+      var form = h("form", { novalidate: true },
+        h("h3", { id: "sheetTitle", text: "Confirm your booking" }),
+        h("p", { class: "lede", text: "Add your details and we'll hold this time for you." }),
+        slotSummary(slot),
+        h("label", { for: "name", text: "Full name" }), name,
+        h("label", { for: "email", text: "Email address" }), email,
+        error,
+        h("div", { class: "actions" }, submit, h("button", { type: "button", class: "btn quiet", text: "Choose another time", onclick: closeSheet })),
+        h("p", { class: "fine", text: "You can cancel from the confirmation screen." })
+      );
+
+      function fail(message) { error.textContent = message; error.hidden = false; }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        error.hidden = true;
+        if (!name.value.trim() || !email.value.trim()) { fail("Enter your name and email address to continue."); return; }
+        state.sending = true;
+        submit.disabled = true;
+        submit.textContent = "Booking…";
+        api("/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Idempotency-Key": state.idemKey },
+          body: JSON.stringify({ slot_id: slot.id, name: name.value, email: email.value })
+        }).then(function (r) {
+          state.sending = false;
+          if (r.status === 201) {
+            showConfirmation(r.data, slot);
+            loadSlots();
+            return;
+          }
+          submit.disabled = false;
+          submit.textContent = "Confirm booking";
+          if (r.status === 409) { fail("That time was just taken. Choose another time."); loadSlots(); }
+          else if (r.status === 429) { fail("Too many attempts with this email. Try again in " + (r.retryAfter || "60") + " seconds."); }
+          else if (r.status === 400 && /email/i.test(r.data.error || "")) { fail("Check your name and email address, then try again."); }
+          else { fail(r.data.error ? r.data.error.charAt(0).toUpperCase() + r.data.error.slice(1) + "." : "Something went wrong. Try again."); }
+        }).catch(function () {
+          state.sending = false;
+          submit.disabled = false;
+          submit.textContent = "Confirm booking";
+          fail("We couldn't reach the server. Check your connection and try again.");
+        });
+      });
+
+      openSheet(form, opener);
+      name.focus();
+    }
+
+    var checkSvg = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    var closedSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+    function fact(label, value) {
+      return h("div", null, h("dt", { text: label }), h("dd", null, value));
+    }
+
+    function showConfirmation(booking, slot) {
+      var cancelled = booking.status === "cancelled";
+      var t = timeParts(slot.start);
+      var copy = h("button", { type: "button", text: "Copy", onclick: function (e) {
+        var b = e.currentTarget;
+        (navigator.clipboard ? navigator.clipboard.writeText(booking.id) : Promise.reject()).then(function () { b.textContent = "Copied"; }, function () { b.textContent = "Select to copy"; });
+      } });
+      var ref = h("div", { class: "ref" }, h("code", { text: booking.id }), copy);
+
+      var actions = h("div", { class: "actions" });
+      var error = h("div", { class: "err", role: "alert", hidden: true });
+      if (!cancelled) {
+        var cancel = h("button", { type: "button", class: "btn warn", text: "Cancel this booking" });
+        cancel.addEventListener("click", function () {
+          cancel.disabled = true;
+          cancel.textContent = "Cancelling…";
+          api("/bookings/" + encodeURIComponent(booking.id), { method: "DELETE" }).then(function (r) {
+            if (r.ok) { showConfirmation(r.data, slot); loadSlots(); }
+            else {
+              cancel.disabled = false;
+              cancel.textContent = "Cancel this booking";
+              error.textContent = r.data.error ? r.data.error.charAt(0).toUpperCase() + r.data.error.slice(1) + "." : "We couldn't cancel this booking. Try again.";
+              error.hidden = false;
+            }
+          }).catch(function () {
+            cancel.disabled = false;
+            cancel.textContent = "Cancel this booking";
+            error.textContent = "We couldn't reach the server. Try again.";
+            error.hidden = false;
+          });
+        });
+        actions.appendChild(h("button", { type: "button", class: "btn wide", text: "Done", onclick: closeSheet }));
+        actions.appendChild(cancel);
+      } else {
+        actions.appendChild(h("button", { type: "button", class: "btn wide", text: "Choose another time", onclick: closeSheet }));
+      }
+
+      var view = h("div", { "aria-live": "polite" },
+        h("div", { class: "badge" + (cancelled ? " off" : ""), html: cancelled ? closedSvg : checkSvg }),
+        h("h3", { id: "sheetTitle", text: cancelled ? "Booking cancelled" : "You're booked" }),
+        h("p", { class: "lede", text: cancelled ? "This time is free again. You can book another any time." : "We've confirmed your appointment. Keep your reference in case you need to cancel." }),
+        h("dl", { class: "facts" },
+          fact("Doctor", slot.provider),
+          fact("Date", fmtFullDay.format(new Date(slot.start))),
+          fact("Time", t.main + " " + t.suffix + ", " + minutes(slot) + " minutes"),
+          fact("Name", booking.name),
+          fact("Email", booking.email),
+          fact("Reference", ref)
+        ),
+        error,
+        actions
+      );
+      openSheet(view);
+      var focusTarget = el.sheet.querySelector(".actions .btn");
+      if (focusTarget) focusTarget.focus();
+    }
+
+    el.refresh.addEventListener("click", function () {
+      state.loaded = false;
+      render();
+      loadSlots();
+    });
+
+    render();
+    loadSlots();
+  </script>
+</body>
+</html>
